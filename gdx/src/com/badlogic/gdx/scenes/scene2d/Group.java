@@ -33,13 +33,13 @@ import com.badlogic.gdx.utils.SnapshotArray;
  * actors added earlier. Touch events that hit more than one actor are distributed to topmost actors first.
  * @author mzechner
  * @author Nathan Sweet */
-public class Group extends Actor implements Cullable {
+public class Group<A extends Actor> extends Actor implements Cullable {
 	static private final Vector2 tmp = new Vector2();
 
-	final SnapshotArray<Actor> children = new SnapshotArray(true, 4, Actor.class);
-	private final Affine2 worldTransform = new Affine2();
-	private final Matrix4 computedTransform = new Matrix4();
-	private final Matrix4 oldTransform = new Matrix4();
+	final SnapshotArray<A> children          = new SnapshotArray<>(true, 4, Actor.class);
+	private final Affine2  worldTransform    = new Affine2();
+	private final Matrix4  computedTransform = new Matrix4();
+	private final Matrix4  oldTransform      = new Matrix4();
 	boolean transform = true;
 	@Null private Rectangle cullingArea;
 
@@ -65,9 +65,9 @@ public class Group extends Actor implements Cullable {
 	 * method avoids drawing children completely outside the {@link #setCullingArea(Rectangle) culling area}, if set. */
 	protected void drawChildren (Batch batch, float parentAlpha) {
 		parentAlpha *= this.color.a;
-		SnapshotArray<Actor> children = this.children;
-		Actor[] actors = children.begin();
-		Rectangle cullingArea = this.cullingArea;
+		SnapshotArray<A> children    = this.children;
+		Actor[]          actors      = children.begin();
+		Rectangle        cullingArea = this.cullingArea;
 		if (cullingArea != null) {
 			// Draw children only if inside culling area.
 			float cullLeft = cullingArea.x;
@@ -146,8 +146,8 @@ public class Group extends Actor implements Cullable {
 	 * these methods don't need to be called, children positions are temporarily offset by the group position when drawn. This
 	 * method avoids drawing children completely outside the {@link #setCullingArea(Rectangle) culling area}, if set. */
 	protected void drawDebugChildren (ShapeRenderer shapes) {
-		SnapshotArray<Actor> children = this.children;
-		Actor[] actors = children.begin();
+		SnapshotArray<A> children = this.children;
+		Actor[]          actors   = children.begin();
 		// No culling, draw all children.
 		if (transform) {
 			for (int i = 0, n = children.size; i < n; i++) {
@@ -261,7 +261,7 @@ public class Group extends Actor implements Cullable {
 
 	/** Adds an actor as a child of this group, removing it from its previous parent. If the actor is already a child of this
 	 * group, no changes are made. */
-	public void addActor (Actor actor) {
+	public void addActor (A actor) {
 		if (actor.parent != null) {
 			if (actor.parent == this) return;
 			actor.parent.removeActor(actor, false);
@@ -275,7 +275,7 @@ public class Group extends Actor implements Cullable {
 	/** Adds an actor as a child of this group at a specific index, removing it from its previous parent. If the actor is already a
 	 * child of this group, no changes are made.
 	 * @param index May be greater than the number of children. */
-	public void addActorAt (int index, Actor actor) {
+	public void addActorAt (int index, A actor) {
 		if (actor.parent != null) {
 			if (actor.parent == this) return;
 			actor.parent.removeActor(actor, false);
@@ -291,7 +291,7 @@ public class Group extends Actor implements Cullable {
 
 	/** Adds an actor as a child of this group immediately before another child actor, removing it from its previous parent. If the
 	 * actor is already a child of this group, no changes are made. */
-	public void addActorBefore (Actor actorBefore, Actor actor) {
+	public void addActorBefore (A actorBefore, A actor) {
 		if (actor.parent != null) {
 			if (actor.parent == this) return;
 			actor.parent.removeActor(actor, false);
@@ -306,7 +306,7 @@ public class Group extends Actor implements Cullable {
 	/** Adds an actor as a child of this group immediately after another child actor, removing it from its previous parent. If the
 	 * actor is already a child of this group, no changes are made. If <code>actorAfter</code> is not in this group, the actor is
 	 * added as the last child. */
-	public void addActorAfter (Actor actorAfter, Actor actor) {
+	public void addActorAfter (A actorAfter, A actor) {
 		if (actor.parent != null) {
 			if (actor.parent == this) return;
 			actor.parent.removeActor(actor, false);
@@ -322,12 +322,12 @@ public class Group extends Actor implements Cullable {
 	}
 
 	/** Removes an actor from this group and unfocuses it. Calls {@link #removeActor(Actor, boolean)} with true. */
-	public boolean removeActor (Actor actor) {
+	public boolean removeActor (A actor) {
 		return removeActor(actor, true);
 	}
 
 	/** Removes an actor from this group. Calls {@link #removeActorAt(int, boolean)} with the actor's child index. */
-	public boolean removeActor (Actor actor, boolean unfocus) {
+	public boolean removeActor (A actor, boolean unfocus) {
 		int index = children.indexOf(actor, true);
 		if (index == -1) return false;
 		removeActorAt(index, unfocus);
@@ -374,7 +374,7 @@ public class Group extends Actor implements Cullable {
 	 * group. */
 	@Null
 	public <T extends Actor> T findActor (String name) {
-		Array<Actor> children = this.children;
+		Array<A> children = this.children;
 		for (int i = 0, n = children.size; i < n; i++)
 			if (name.equals(children.get(i).getName())) return (T)children.get(i);
 		for (int i = 0, n = children.size; i < n; i++) {
@@ -404,7 +404,7 @@ public class Group extends Actor implements Cullable {
 	}
 
 	/** Swaps two actors. Returns false if the swap did not occur because the actors are not children of this group. */
-	public boolean swapActor (Actor first, Actor second) {
+	public boolean swapActor (A first, A second) {
 		int firstIndex = children.indexOf(first, true);
 		int secondIndex = children.indexOf(second, true);
 		if (firstIndex == -1 || secondIndex == -1) return false;
@@ -418,7 +418,7 @@ public class Group extends Actor implements Cullable {
 	}
 
 	/** Returns an ordered list of child actors in this group. */
-	public SnapshotArray<Actor> getChildren () {
+	public SnapshotArray<A> getChildren () {
 		return children;
 	}
 
